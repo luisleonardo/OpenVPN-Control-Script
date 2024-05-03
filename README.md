@@ -19,6 +19,24 @@ Have you ever found yourself unsure if your VPN is running or struggling to loca
 -   No need to remember the location of your .ovpn file.
 -   If placed in a directory included in the system's PATH, such as  `/usr/local/bin`, it can be executed from anywhere.
 
+## Installation
+
+[](https://github.com/luisleonardo/OpenVPN-Control-Script#installation)
+
+1. **Download the Script to the System's Command Directory:**
+	 - Open a terminal and execute the following command to download the `ovpn` file directly from your Git repository to `/usr/local/bin`: 
+   
+       `sudo wget -O /usr/local/bin/ovpn https://raw.githubusercontent.com/luisleonardo/OpenVPN-Control-Script/main/ovpn`
+2. **Grant Execution Permissions (if necessary)**:
+	 - If the script doesn't have execution permissions, you can grant them with the command: 
+   
+       `sudo chmod +x /usr/local/bin/ovpn`
+
+3. **Verify Successful Installation**:
+	 - To verify that the installation was successful, you can try executing the script from any directory using the command:: 
+   
+       `ovpn --help`
+
 ## Usage
 
 [](https://github.com/luisleonardo/OpenVPN-Control-Script#usage)
