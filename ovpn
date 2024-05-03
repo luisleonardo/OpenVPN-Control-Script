@@ -1,0 +1,80 @@
+#!/bin/bash
+
+# Path to the OpenVPN configuration file
+CONFIG_FILE="/home/user/openvpn/config.ovpn"
+
+# Name of the OpenVPN process
+VPN_PROCESS="openvpn"
+
+# VPN IP address
+VPN_IP="10.10.10.10"
+
+# Timeout for curl command (in seconds)
+CURL_TIMEOUT=2
+
+# Function to connect to the VPN
+connect() {
+    sudo $VPN_PROCESS --config "$CONFIG_FILE"
+}
+
+# Function to disconnect from the VPN
+disconnect() {
+    sudo pkill $VPN_PROCESS
+}
+
+# Function to restart the VPN
+restart() {
+    disconnect
+    sleep 5
+    connect
+}
+
+# Function to check VPN status
+check_status() {
+    vpn_ip=$(timeout $CURL_TIMEOUT curl -s $VPN_IP/whoami)
+    if [[ -n $(echo "$vpn_ip" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b") ]]; then
+        echo "VPN IP address: $vpn_ip"
+        echo "VPN status: Connected"
+    else
+        echo "VPN status: Disconnected"
+    fi
+}
+
+# Function to display available actions
+show_help() {
+    echo "Usage: ovpn {start|stop|restart|status}"
+    echo "       ovpn --help     Display this help message"
+}
+
+# Main script logic
+if [[ $# -eq 0 || $1 == "--help" ]]; then
+    show_help
+    exit 0
+fi
+
+case "$1" in
+    "start"|"connect")
+        if pgrep $VPN_PROCESS > /dev/null; then
+            echo "VPN connection is already active."
+            exit 1
+        else
+            connect
+        fi
+        ;;
+    "stop"|"disconnect")
+        disconnect
+        ;;
+    "restart")
+        restart
+        ;;
+    "status")
+        check_status
+        ;;
+    *)
+        echo "Invalid option: $1"
+        show_help
+        exit 1
+        ;;
+esac
+
+exit 0
