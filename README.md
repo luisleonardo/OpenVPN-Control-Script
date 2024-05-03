@@ -18,6 +18,7 @@ Have you ever found yourself unsure if your VPN is running or struggling to loca
 -   Start and stop your VPN connection with ease.
 -   No need to remember the location of your .ovpn file.
 -   If placed in a directory included in the system's PATH, such as  `/usr/local/bin`, it can be executed from anywhere.
+-   Please note that the status check feature was made to work with TryHackMe OpenVPN. If you want to reuse the script for other VPN providers, you may need to review and adjust the status check accordingly.
 
 ## Installation
 
