@@ -12,27 +12,27 @@ VPN_IP="10.10.10.10"
 # Timeout for curl command (in seconds)
 CURL_TIMEOUT=2
 
+# Check for required commands
+for cmd in $VPN_PROCESS curl pgrep pkill; do
+    command -v "$cmd" >/dev/null 2>&1 || { echo >&2 "The script requires $cmd but it's not installed.  Aborting."; exit 1; }
+done
+
 # Function to connect to the VPN
 connect() {
-    sudo $VPN_PROCESS --config "$CONFIG_FILE"
+    echo "Starting VPN..."
+    sudo $VPN_PROCESS --config "$CONFIG_FILE" &
 }
 
 # Function to disconnect from the VPN
 disconnect() {
-    sudo pkill $VPN_PROCESS
-}
-
-# Function to restart the VPN
-restart() {
-    disconnect
-    sleep 5
-    connect
+    echo "Stopping VPN..."
+    sudo pkill -f $VPN_PROCESS
 }
 
 # Function to check VPN status
 check_status() {
-    vpn_ip=$(timeout $CURL_TIMEOUT curl -s $VPN_IP/whoami)
-    if [[ -n $(echo "$vpn_ip" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b") ]]; then
+    vpn_ip=$(curl --connect-timeout $CURL_TIMEOUT -s $VPN_IP/whoami)
+    if [[ $vpn_ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
         echo "VPN IP address: $vpn_ip"
         echo "VPN status: Connected"
     else
@@ -42,33 +42,30 @@ check_status() {
 
 # Function to display available actions
 show_help() {
-    echo "Usage: ovpn {start|stop|restart|status}"
-    echo "       ovpn --help     Display this help message"
+    cat <<- EOF
+    Usage: ovpn {start|stop|restart|status}
+           ovpn --help     Display this help message
+EOF
 }
 
 # Main script logic
-if [[ $# -eq 0 || $1 == "--help" ]]; then
-    show_help
-    exit 0
-fi
-
 case "$1" in
-    "start"|"connect")
-        if pgrep $VPN_PROCESS > /dev/null; then
-            echo "VPN connection is already active."
-            exit 1
-        else
-            connect
-        fi
+    start|connect)
+        pgrep -x $VPN_PROCESS >/dev/null && echo "VPN connection is already active." || connect
         ;;
-    "stop"|"disconnect")
+    stop|disconnect)
         disconnect
         ;;
-    "restart")
-        restart
+    restart)
+        disconnect
+        sleep 5
+        connect
         ;;
-    "status")
+    status)
         check_status
+        ;;
+    --help|"")
+        show_help
         ;;
     *)
         echo "Invalid option: $1"
@@ -76,5 +73,3 @@ case "$1" in
         exit 1
         ;;
 esac
-
-exit 0
