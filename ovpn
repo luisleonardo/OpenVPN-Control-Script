@@ -1,20 +1,27 @@
 #!/bin/bash
 
-# Path to the OpenVPN configuration file
+# Default path to the OpenVPN configuration file
 CONFIG_FILE="/home/user/openvpn/config.ovpn"
 
 # Name of the OpenVPN process
 VPN_PROCESS="openvpn"
 
-# VPN IP address
-VPN_IP="10.10.10.10"
+# VPN IP address for checking the connection
+VPN_IP_CHECK="10.10.10.10"
 
 # Timeout for curl command (in seconds)
 CURL_TIMEOUT=2
 
+# Default run mode
+RUN_MODE="daemon" # Run in background by default
+
 # Function to connect to the VPN
 connect() {
-    sudo $VPN_PROCESS --config "$CONFIG_FILE"
+    if [ "$RUN_MODE" = "daemon" ]; then
+        sudo $VPN_PROCESS --config "$CONFIG_FILE" --daemon
+    else
+        sudo $VPN_PROCESS --config "$CONFIG_FILE"
+    fi
 }
 
 # Function to disconnect from the VPN
@@ -31,7 +38,7 @@ restart() {
 
 # Function to check VPN status
 check_status() {
-    vpn_ip=$(timeout $CURL_TIMEOUT curl -s $VPN_IP/whoami)
+    vpn_ip=$(timeout $CURL_TIMEOUT curl -s $VPN_IP_CHECK/whoami)
     if [[ -n $(echo "$vpn_ip" | grep -oE "\b([0-9]{1,3}\.){3}[0-9]{1,3}\b") ]]; then
         echo "VPN IP address: $vpn_ip"
         echo "VPN status: Connected"
@@ -40,10 +47,32 @@ check_status() {
     fi
 }
 
+# Function to update the config file path in this script
+update_config_file() {
+    if [[ $(id -u) -ne 0 ]]; then
+        echo "Error: Updating config file path requires elevated permissions."
+        exit 1
+    fi
+
+    if [[ -z "$1" ]]; then
+        echo "Current config file path: $CONFIG_FILE"
+        exit 0
+    else
+        new_path="$1"
+        script_path="$0"
+        sed -i "4s|CONFIG_FILE=.*|CONFIG_FILE=\"$new_path\"|" "$script_path"
+        echo "Config file path updated to $new_path."
+        exit 0
+    fi
+}
+
 # Function to display available actions
 show_help() {
-    echo "Usage: ovpn {start|stop|restart|status}"
-    echo "       ovpn --help     Display this help message"
+    echo "Usage: ovpn {start|stop|restart|status} [--daemon|-d|--terminal|-t] [--config_file PATH]"
+    echo "       --daemon, -d       Run VPN in background mode"
+    echo "       --terminal, -t     Run VPN in terminal mode"
+    echo "       --config_file PATH Update path to config file or show current path"
+    echo "       ovpn --help        Display this help message"
 }
 
 # Main script logic
@@ -52,7 +81,28 @@ if [[ $# -eq 0 || $1 == "--help" ]]; then
     exit 0
 fi
 
-case "$1" in
+# Parse options for run mode and config path update
+while [[ "$#" -gt 0 ]]; do
+    case "$1" in
+        "--daemon"|"-d")
+            RUN_MODE="daemon"
+            shift
+            ;;
+        "--terminal"|"-t")
+            RUN_MODE="terminal"
+            shift
+            ;;
+        "--config_file")
+            update_config_file "$2"
+            ;;
+        *)
+            ACTION="$1"
+            shift
+            ;;
+    esac
+done
+
+case "$ACTION" in
     "start"|"connect")
         if pgrep $VPN_PROCESS > /dev/null; then
             echo "VPN connection is already active."
@@ -71,7 +121,7 @@ case "$1" in
         check_status
         ;;
     *)
-        echo "Invalid option: $1"
+        echo "Invalid option: $ACTION"
         show_help
         exit 1
         ;;
