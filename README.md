@@ -1,9 +1,9 @@
 
-# VPN Control Script
+# OPENVPN Control Script
 
 [](https://github.com/luisleonardo/OpenVPN-Control-Script#vpn-control-script)
 
-This is a simple Python script that allows you to easily interact with your VPN connection.
+This is a simple Python script that allows you to easily interact with your OPENVPN connection.
 
 ## Introduction
 
@@ -16,9 +16,11 @@ Have you ever found yourself unsure if your VPN is running or struggling to loca
 [](https://github.com/luisleonardo/OpenVPN-Control-Script#features)
 
 -   Start and stop your VPN connection with ease.
+-   Switch between background and terminal modes during VPN operation.
+-   Dynamic configuration of the .ovpn file path through script arguments.
 -   No need to remember the location of your .ovpn file.
 -   If placed in a directory included in the system's PATH, such as  `/usr/local/bin`, it can be executed from anywhere.
--   Please note that the status check feature was made to work with TryHackMe OpenVPN. If you want to reuse the script for other VPN providers, you may need to review and adjust the status check accordingly.
+-   Please note that while the status check feature was initially tailored for TryHackMe OpenVPN, with minor adjustments, it can be adapted for use with other VPN providers.
 
 ## Installation
 
@@ -42,26 +44,42 @@ Have you ever found yourself unsure if your VPN is running or struggling to loca
 
 [](https://github.com/luisleonardo/OpenVPN-Control-Script#usage)
 
-1.  **Starting the VPN**:
+1.  **Starting OpenVPN (default mode is daemon - change in script vars e needed)**:
     
     `ovpn start`
     
-2.  **Stopping the VPN**:
+2.  **Starting OpenVPN in background mode (daemon)**:
+    
+    `ovpn start --daemon`
+    
+3.  **Starting OpenVPN in terminal mode**:
+    
+    `ovpn start --terminal`
+    
+4.  **Stopping OpenVPN**:
     
     `ovpn stop`
     
-3.  **Restarting the VPN**:
+5.  **Restarting OpenVPN**:
     
     `ovpn restart`
     
-4.  **Checking VPN Status**:
+6.  **Checking OpenVPN Status**:
     
     `ovpn status`
     
-5.  **Help**:
+7.  **Changing the Location of the .ovpn File (requires elevated permissions)**:
+    
+    `sudo ovpn --config_file /path/to/new/config.ovpn`
+    
+8.  **Help**:
     
     `ovpn --help`
-    
+
+
+## Changelog
+For a detailed account of changes made to the script, refer to CHANGELOG.md in this repository.
+
 
 ## License
 
